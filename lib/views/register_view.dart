@@ -14,7 +14,7 @@ class RegisterView extends StatefulWidget {
 class _RegisterViewState extends State<RegisterView> {
   late final TextEditingController _email;
   late final TextEditingController _password;
-  final Logger _log = Logger('HomePage');
+  final Logger _log = Logger('RegisterView');
 
   @override
   void initState() {
@@ -41,51 +41,44 @@ class _RegisterViewState extends State<RegisterView> {
   Widget build(BuildContext context) {
     configureLogger();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Register'),
-        backgroundColor: Colors.blue,
-      ),
-      body: Column(
-        children: [
-          TextField(
-              controller: _email,
-              enableSuggestions: false,
-              autocorrect: false,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(hintText: 'Enter email.')),
-          TextField(
-              controller: _password,
-              obscureText: true,
-              enableSuggestions: false,
-              autocorrect: false,
-              decoration: const InputDecoration(hintText: 'Enter password.')),
-          TextButton(
-            onPressed: () async {
-              final email = _email.text;
-              final password = _password.text;
-              _log.fine('Call backend with $email and $password');
+    return Column(
+      children: [
+        TextField(
+            controller: _email,
+            enableSuggestions: false,
+            autocorrect: false,
+            keyboardType: TextInputType.emailAddress,
+            decoration: const InputDecoration(hintText: 'Enter email.')),
+        TextField(
+            controller: _password,
+            obscureText: true,
+            enableSuggestions: false,
+            autocorrect: false,
+            decoration: const InputDecoration(hintText: 'Enter password.')),
+        TextButton(
+          onPressed: () async {
+            final email = _email.text;
+            final password = _password.text;
+            _log.fine('Call backend with $email and $password');
 
-              final http.Response response;
-              try {
-                final url = Uri.parse(
-                    'https://80f1em8so7.execute-api.us-east-1.amazonaws.com/');
-                response = await http.get(url);
-                if (response.statusCode == 200) {
-                  final responseBody = json.decode(response.body);
-                  _log.fine(responseBody['message']);
-                } else {
-                  _log.fine(
-                      'Request failed with status: ${response.statusCode}');
-                }
-              } catch (e) {
-                _log.warning('Exception with: $e');
+            final http.Response response;
+            try {
+              final url = Uri.parse(
+                  'https://80f1em8so7.execute-api.us-east-1.amazonaws.com/');
+              response = await http.get(url);
+              if (response.statusCode == 200) {
+                final responseBody = json.decode(response.body);
+                _log.fine(responseBody['message']);
+              } else {
+                _log.fine('Request failed with status: ${response.statusCode}');
               }
-            },
-            child: const Text('Register'),
-          ),
-        ],
-      ),
+            } catch (e) {
+              _log.warning('Exception with: $e');
+            }
+          },
+          child: const Text('Register'),
+        ),
+      ],
     );
   }
 }
