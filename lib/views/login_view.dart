@@ -32,57 +32,61 @@ class _LoginViewState extends State<LoginView> {
     super.dispose();
   }
 
-  void configureLogger() {
-    Logger.root.level = Level.FINE;
-    Logger.root.onRecord.listen((record) {
-      print('${record.level.name}: ${record.time}: ${record.message}');
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    configureLogger();
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Login'),
+      ),
+      body: Column(
+        children: [
+          TextField(
+              controller: _email,
+              enableSuggestions: false,
+              autocorrect: false,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(hintText: 'Enter email.')),
+          TextField(
+              controller: _password,
+              obscureText: true,
+              enableSuggestions: false,
+              autocorrect: false,
+              decoration: const InputDecoration(hintText: 'Enter password.')),
+          TextButton(
+            onPressed: () async {
+              final email = _email.text;
+              final password = _password.text;
+              logger.fine('Call Login backend with $email and $password');
 
-    return Column(
-      children: [
-        TextField(
-            controller: _email,
-            enableSuggestions: false,
-            autocorrect: false,
-            keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(hintText: 'Enter email.')),
-        TextField(
-            controller: _password,
-            obscureText: true,
-            enableSuggestions: false,
-            autocorrect: false,
-            decoration: const InputDecoration(hintText: 'Enter password.')),
-        TextButton(
-          onPressed: () async {
-            final email = _email.text;
-            final password = _password.text;
-            logger?.fine('Call Login backend with $email and $password');
+              final http.Response response;
+              try {
+                final url = Uri.parse(
+                    'https://80f1em8so7.execute-api.us-east-1.amazonaws.com/');
+                response = await http.get(url);
 
-            final http.Response response;
-            try {
-              final url = Uri.parse(
-                  'https://80f1em8so7.execute-api.us-east-1.amazonaws.com/');
-              response = await http.get(url);
-
-              if (response.statusCode == 200) {
-                final responseBody = json.decode(response.body);
-                logger?.fine(responseBody['message']);
-              } else {
-                logger?.fine(
-                    'Request failed with status: ${response.statusCode}');
+                if (response.statusCode == 200) {
+                  final responseBody = json.decode(response.body);
+                  logger.fine(responseBody['message']);
+                } else {
+                  logger.fine(
+                      'Request failed with status: ${response.statusCode}');
+                }
+              } catch (e) {
+                logger.severe(e);
               }
-            } catch (e) {
-              logger?.severe(e);
-            }
-          },
-          child: const Text('Login'),
-        ),
-      ],
+            },
+            child: const Text('Login'),
+          ),
+          TextButton(
+            onPressed: () {
+              logger.fine('Register here clicked.');
+              Navigator.of(context)
+                  .pushNamedAndRemoveUntil('/register/', (route) => false);
+            },
+            child: const Text('Not registered yet? Register here.'),
+          )
+        ],
+      ),
     );
   }
 }

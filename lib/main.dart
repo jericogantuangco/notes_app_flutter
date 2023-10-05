@@ -6,76 +6,78 @@ import 'dart:convert';
 import 'package:notes_app/views/login_view.dart';
 import 'package:notes_app/views/register_view.dart';
 
+import 'views/verify_email_view.dart';
+
 void main() {
+  final logger = Logger('HomePage');
+  Logger.root.level = Level.FINE;
+  Logger.root.onRecord.listen((record) {
+    print('${record.level.name}: ${record.time}: ${record.message}');
+  });
+
   runApp(MaterialApp(
     title: 'Flutter Demo Now',
     theme: ThemeData(
       colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       useMaterial3: true,
     ),
-    home: const HomePage(),
+    home: HomePage(logger: logger),
+    routes: {
+      '/login/': (context) => LoginView(logger: logger),
+      '/register/': (context) => const RegisterView(),
+    },
   ));
 }
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  final Logger logger;
+  const HomePage({super.key, required this.logger});
 
   @override
   Widget build(BuildContext context) {
-    final logger = Logger('HomePage');
-    Logger.root.level = Level.FINE;
-    Logger.root.onRecord.listen((record) {
-      print('${record.level.name}: ${record.time}: ${record.message}');
-    });
+    return FutureBuilder(
+      future: http.get(Uri.parse(
+          'https://80f1em8so7.execute-api.us-east-1.amazonaws.com/verify-email')),
+      builder: (context, snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.done:
+            final responseData = snapshot.data?.body ?? "";
+            final user = json.decode(responseData)['user'];
+            logger.fine(user);
 
-    return Scaffold(
-        appBar: AppBar(
-          title: const Text('Home Page'),
-        ),
-        body: FutureBuilder(
-          future: http.get(Uri.parse(
-              'https://80f1em8so7.execute-api.us-east-1.amazonaws.com/verify-email')),
-          builder: (context, snapshot) {
-            switch (snapshot.connectionState) {
-              case ConnectionState.done:
-                final responseData = snapshot.data?.body ?? "";
-                final user = json.decode(responseData)['user'];
-                logger.fine(user);
-
-                if (user['verified']) {
-                  print('You are a verified user');
-                  return LoginView(logger: logger);
-                } else {
-                  print('You need to verify your email first');
-                  return const VerifyEmailView();
-                }
-                return const Text('Done');
-              default:
-                return const Text('Loading...');
+            if (user != null && !user['verified']) {
+              logger.fine('You need to verify your email first');
+              return VerifyEmailView(logger: logger);
+            } else if (user != null) {
+              return const NotesView();
             }
-          },
-        ));
+
+            logger.fine('You are a verified user');
+            return LoginView(logger: logger);
+
+          default:
+            return const Scaffold(
+                body: Center(child: CircularProgressIndicator()));
+        }
+      },
+    );
   }
 }
 
-class VerifyEmailView extends StatefulWidget {
-  const VerifyEmailView({super.key});
+class NotesView extends StatefulWidget {
+  const NotesView({super.key});
 
   @override
-  State<VerifyEmailView> createState() => _VerifyEmailViewState();
+  State<NotesView> createState() => _NotesViewState();
 }
 
-class _VerifyEmailViewState extends State<VerifyEmailView> {
+class _NotesViewState extends State<NotesView> {
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const Text('Please verify your email address'),
-        TextButton(
-          onPressed: () => print('Sent verification email'),
-          child: const Text('Send email verification'),
-        )
-      ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Main UI'),
+      ),
     );
   }
 }
