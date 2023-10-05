@@ -49,7 +49,7 @@ class HomePage extends StatelessWidget {
               logger.fine('You need to verify your email first');
               return VerifyEmailView(logger: logger);
             } else if (user != null) {
-              return const NotesView();
+              return NotesView(logger: logger);
             }
 
             logger.fine('You are a verified user');
@@ -64,20 +64,71 @@ class HomePage extends StatelessWidget {
   }
 }
 
+enum MenuAction { logout }
+
 class NotesView extends StatefulWidget {
-  const NotesView({super.key});
+  final Logger logger;
+  const NotesView({super.key, required this.logger});
 
   @override
-  State<NotesView> createState() => _NotesViewState();
+  State<NotesView> createState() => _NotesViewState(logger);
 }
 
 class _NotesViewState extends State<NotesView> {
+  _NotesViewState(this.logger);
+  late final Logger logger;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Main UI'),
-      ),
+      appBar: AppBar(title: const Text('Main UI'), actions: [
+        PopupMenuButton<MenuAction>(
+          onSelected: (value) async {
+            switch (value) {
+              case MenuAction.logout:
+                final loggingOut = await showLogoutDialog(context);
+                logger.fine('Logging out: ${loggingOut.toString()}');
+
+                if (loggingOut) {
+                  // Put call to logout api here.
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    '/login/',
+                    (_) => false,
+                  );
+                }
+                break;
+            }
+          },
+          itemBuilder: (context) {
+            return const [
+              PopupMenuItem<MenuAction>(
+                value: MenuAction.logout,
+                child: Text('Logout'),
+              )
+            ];
+          },
+        ),
+      ]),
     );
   }
+}
+
+Future<bool> showLogoutDialog(BuildContext context) {
+  return showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+            title: const Text('Sign out'),
+            content: const Text('Are you sure you want to sign out?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Logout'),
+              ),
+            ]);
+      }).then((value) => value ?? false);
 }
