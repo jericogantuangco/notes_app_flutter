@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import 'package:notes_app/views/login_view.dart';
 import 'package:notes_app/views/register_view.dart';
+import 'package:notes_app/constants/routes.dart';
 
 import 'views/verify_email_view.dart';
 
@@ -23,8 +24,9 @@ void main() {
     ),
     home: HomePage(logger: logger),
     routes: {
-      '/login/': (context) => LoginView(logger: logger),
-      '/register/': (context) => const RegisterView(),
+      loginRoute: (context) => LoginView(logger: logger),
+      registerRoute: (context) => const RegisterView(),
+      notesRoute: (context) => NotesView(logger: logger),
     },
   ));
 }
@@ -92,7 +94,7 @@ class _NotesViewState extends State<NotesView> {
                 if (loggingOut) {
                   // Put call to logout api here.
                   Navigator.of(context).pushNamedAndRemoveUntil(
-                    '/login/',
+                    loginRoute,
                     (_) => false,
                   );
                 }

@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 
 import 'dart:convert';
 
+import 'package:notes_app/constants/routes.dart';
+
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
 
@@ -88,7 +90,7 @@ class _RegisterViewState extends State<RegisterView> {
             onPressed: () {
               _log.fine('Login here clicked');
               Navigator.of(context)
-                  .pushNamedAndRemoveUntil('/login/', (route) => false);
+                  .pushNamedAndRemoveUntil(loginRoute, (route) => false);
             },
           ),
         ],
