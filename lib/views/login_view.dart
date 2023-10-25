@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import 'package:notes_app/constants/routes.dart';
+import 'package:notes_app/constants/networking.dart';
+import 'package:notes_app/utilities/show_error_dialog.dart';
 
 class LoginView extends StatefulWidget {
   final Logger logger;
@@ -75,15 +77,22 @@ class _LoginViewState extends State<LoginView> {
 
               try {
                 response = await http.post(url, headers: headers, body: body);
-
+                final responseBody = json.decode(response.body);
                 if (response.statusCode == 200) {
-                  final responseBody = json.decode(response.body);
                   logger.fine(responseBody['message']);
                   Navigator.of(context)
                       .pushNamedAndRemoveUntil(notesRoute, (route) => false);
                 } else {
                   logger.fine(
                       'Request failed with status: ${response.statusCode}');
+                  if (responseBody['message'] == APIError.userNotFound) {
+                    await showErrorDialog(context, 'User is not found.');
+                  } else if (responseBody['message'] ==
+                      APIError.invalidUsernameOrPassword) {
+                    await showErrorDialog(
+                        context, 'Invalid username or password used.');
+                  }
+                  await showErrorDialog(context, 'Request failed');
                 }
               } catch (e) {
                 logger.severe(e);
